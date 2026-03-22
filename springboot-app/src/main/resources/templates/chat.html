@@ -1,0 +1,348 @@
+<!-- <!DOCTYPE html>
+<html>
+    <head>
+        <title>Chat page</title>
+    </head>
+    <body>
+        <h1>Chat page</h1>
+    </body>
+</html> -->
+
+<!DOCTYPE html>
+
+<html class="dark" lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org"
+    xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+
+    <title>Hobby-AI-Concierge | The Atelier</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-fixed": "#5d5f5f",
+                        "primary": "#ffffff",
+                        "tertiary-fixed-dim": "#44474a",
+                        "on-primary-fixed": "#ffffff",
+                        "outline": "#919191",
+                        "on-error-container": "#ffdad6",
+                        "surface": "#121318",
+                        "secondary-fixed-dim": "#a5acb8",
+                        "surface-tint": "#c6c6c7",
+                        "surface-container-lowest": "#0d0e13",
+                        "error": "#ffb4ab",
+                        "background": "#121318",
+                        "on-tertiary-fixed-variant": "#e0e2e6",
+                        "tertiary": "#e0e2e6",
+                        "surface-container-highest": "#34343a",
+                        "surface-container-high": "#292a2f",
+                        "on-secondary-container": "#dce3f0",
+                        "tertiary-fixed": "#5c5f62",
+                        "on-primary-fixed-variant": "#e2e2e2",
+                        "on-primary": "#1a1c1c",
+                        "on-tertiary-container": "#000000",
+                        "inverse-surface": "#e3e1e9",
+                        "surface-bright": "#38393e",
+                        "secondary": "#c0c7d3",
+                        "surface-container": "#1e1f25",
+                        "on-surface-variant": "#c6c6c6",
+                        "secondary-fixed": "#c0c7d3",
+                        "primary-container": "#d4d4d4",
+                        "on-tertiary": "#191c1f",
+                        "primary-fixed-dim": "#454747",
+                        "on-primary-container": "#000000",
+                        "inverse-on-surface": "#2f3036",
+                        "tertiary-container": "#8e9195",
+                        "on-error": "#690005",
+                        "outline-variant": "#474747",
+                        "on-secondary-fixed-variant": "#353c46",
+                        "secondary-container": "#404752",
+                        "on-tertiary-fixed": "#ffffff",
+                        "on-surface": "#e3e1e9",
+                        "on-background": "#e3e1e9",
+                        "inverse-primary": "#5d5f5f",
+                        "surface-container-low": "#1a1b20",
+                        "on-secondary-fixed": "#151c25",
+                        "on-secondary": "#151c25",
+                        "surface-dim": "#121318",
+                        "surface-variant": "#34343a",
+                        "error-container": "#93000a"
+                    },
+                    fontFamily: {
+                        "headline": ["Space Grotesk"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: { "DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        .dot-grid {
+            background-image: radial-gradient(circle, #474747 1px, transparent 1px);
+            background-size: 32px 32px;
+        }
+
+        .glass-panel {
+            background: rgba(30, 31, 37, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .metallic-gradient {
+            background: linear-gradient(135deg, #ffffff 0%, #a5acb8 100%);
+        }
+    </style>
+</head>
+
+<body class="bg-background text-on-background font-body overflow-hidden selection:bg-primary selection:text-on-primary">
+    <!-- SideNavBar (Desktop) -->
+    <aside
+        class="fixed left-0 top-0 h-full z-40 flex flex-col p-4 bg-[#1e1f24] dark:bg-[#1e1f24] h-full w-64 border-r border-transparent transition-all duration-300 ease-in-out hidden md:flex shadow-2xl shadow-black/40">
+        <div class="mb-12 px-4">
+            <h1 class="font-['Space_Grotesk'] font-bold text-white text-xl tracking-tighter">The Atelier</h1>
+            <p class="text-xs text-on-surface-variant font-medium tracking-widest uppercase mt-1">AI Concierge</p>
+        </div>
+        <nav class="flex-grow space-y-2">
+            <button
+                class="w-full flex items-center gap-3 bg-white text-black rounded-full font-bold px-4 py-3 transition-all duration-300 ease-in-out">
+                <span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
+                <span class="font-['Inter'] text-sm tracking-tight">New Chat</span>
+            </button>
+            <!-- <button
+                class="w-full flex items-center gap-3 text-[#c6c6c6] hover:text-white px-4 py-3 hover:bg-[#292a2f] rounded-full transition-all duration-300 ease-in-out">
+                <span class="material-symbols-outlined" data-icon="auto_awesome_motion">auto_awesome_motion</span>
+                <span class="font-['Inter'] text-sm tracking-tight">Library</span>
+            </button>
+            <button
+                class="w-full flex items-center gap-3 text-[#c6c6c6] hover:text-white px-4 py-3 hover:bg-[#292a2f] rounded-full transition-all duration-300 ease-in-out">
+                <span class="material-symbols-outlined" data-icon="layers">layers</span>
+                <span class="font-['Inter'] text-sm tracking-tight">Workspaces</span>
+            </button>
+            <button
+                class="w-full flex items-center gap-3 text-[#c6c6c6] hover:text-white px-4 py-3 hover:bg-[#292a2f] rounded-full transition-all duration-300 ease-in-out">
+                <span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+                <span class="font-['Inter'] text-sm tracking-tight">Archives</span>
+            </button> -->
+        </nav>
+        <!-- <div class="mt-auto p-4 bg-surface-container-high rounded-xl">
+            <p class="text-xs text-on-surface-variant mb-3">Power your workflow</p>
+            <button
+                class="w-full metallic-gradient text-on-secondary py-2 rounded-full text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-opacity">
+                Upgrade to Pro
+            </button>
+        </div> -->
+    </aside>
+    <!-- Main Workspace -->
+    <main class="md:ml-64 flex flex-col h-screen relative dot-grid overflow-hidden">
+        <!-- TopAppBar -->
+        <!-- <header
+            class="flex justify-between items-center w-full px-6 py-4 bg-[#121318] dark:bg-[#121318] docked full-width top-0 z-30">
+            <div class="flex items-center gap-4">
+                <span class="md:hidden material-symbols-outlined text-white" data-icon="menu">menu</span>
+                <h2 class="font-['Space_Grotesk'] tracking-tighter text-white text-xl uppercase font-bold">
+                    Hobby-AI-Concierge</h2>
+            </div>
+            <div class="flex items-center gap-6">
+                <div class="hidden lg:flex items-center gap-8">
+                    <span
+                        class="font-['Space_Grotesk'] tracking-tighter text-white font-bold text-sm cursor-pointer">Chat</span>
+                    <span
+                        class="font-['Space_Grotesk'] tracking-tighter text-[#c6c6c6] text-sm cursor-pointer hover:text-white transition-colors">Performance</span>
+                    <span
+                        class="font-['Space_Grotesk'] tracking-tighter text-[#c6c6c6] text-sm cursor-pointer hover:text-white transition-colors">Resources</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button
+                        class="p-2 text-white hover:bg-[#292a2f] rounded-full transition-colors scale-95 active:scale-90 transition-transform">
+                        <span class="material-symbols-outlined" data-icon="settings">settings</span>
+                    </button>
+                    <button
+                        class="p-2 text-white hover:bg-[#292a2f] rounded-full transition-colors scale-95 active:scale-90 transition-transform">
+                        <span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+                    </button>
+                </div>
+            </div>
+        </header> -->
+        <!-- Content Canvas -->
+        <section class="flex-grow flex flex-col items-center px-6 pb-32 overflow-y-auto pt-12">
+            <div id="chat-canvas" class="w-full max-w-4xl space-y-12">
+                <!-- Initial Prompt Example -->
+                <!-- <div class="flex justify-end">
+                    <div
+                        class="bg-surface-container-high px-6 py-4 rounded-3xl rounded-tr-none max-w-lg border border-outline-variant/10">
+                        <p class="text-on-surface text-sm leading-relaxed">Design a high-fidelity dashboard for a
+                            vintage camera restoration hobbyist, emphasizing technical specs and chemical safety.</p>
+                    </div>
+                </div> -->
+                <!-- AI Response Shell -->
+                <!-- <div class="flex justify-start items-start gap-4">
+                    <div
+                        class="w-8 h-8 rounded-full metallic-gradient flex items-center justify-center flex-shrink-0 mt-1">
+                        <span class="material-symbols-outlined text-on-secondary text-lg"
+                            data-icon="auto_awesome">auto_awesome</span>
+                    </div>
+                    <div
+                        class="glass-panel w-full p-8 rounded-3xl border border-outline-variant/20 shadow-2xl relative overflow-hidden group"> -->
+                <!-- Pulse Indicator -->
+                <!-- <div class="absolute top-4 right-6 flex items-center gap-2">
+                            <span
+                                class="text-[10px] text-on-surface-variant font-bold uppercase tracking-widest">Processing</span>
+                            <div class="w-2 h-2 rounded-full metallic-gradient animate-pulse"></div>
+                        </div>
+                        <div class="space-y-6">
+                            <h3 class="font-headline text-3xl font-bold tracking-tighter text-white leading-none">The
+                                restoration atelier.</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div
+                                    class="bg-surface-container-lowest/50 p-6 rounded-2xl border border-outline-variant/10">
+                                    <div class="flex items-center gap-2 mb-3 text-on-surface-variant">
+                                        <span class="material-symbols-outlined text-sm"
+                                            data-icon="science">science</span>
+                                        <span class="text-[10px] font-bold uppercase tracking-wider">Safety
+                                            Protocols</span>
+                                    </div>
+                                    <p class="text-sm text-on-surface leading-relaxed">Integrated chemical vapor
+                                        detection using the sensor array. Automatic exhaust triggers at 50ppm.</p>
+                                </div>
+                                <div
+                                    class="bg-surface-container-lowest/50 p-6 rounded-2xl border border-outline-variant/10">
+                                    <div class="flex items-center gap-2 mb-3 text-on-surface-variant">
+                                        <span class="material-symbols-outlined text-sm"
+                                            data-icon="precision_manufacturing">precision_manufacturing</span>
+                                        <span class="text-[10px] font-bold uppercase tracking-wider">Spec Mapping</span>
+                                    </div>
+                                    <p class="text-sm text-on-surface leading-relaxed">Auto-calibration for Leica
+                                        M-series shutter speed testing. Precision: ±0.02ms tolerance.</p>
+                                </div>
+                            </div>
+                            <div class="space-y-4">
+                                <p class="text-on-surface/80 text-sm leading-relaxed">I have mapped out a three-stage
+                                    layout including a high-contrast terminal view for optical measurements and a
+                                    glass-morphic panel for chemical ratios. Should we prioritize the 3D parts-inventory
+                                    system or the darkroom timer module first?</p>
+                                <div class="flex gap-2 pt-2">
+                                    <button
+                                        class="px-4 py-2 bg-surface-container-highest rounded-full text-xs font-medium hover:bg-surface-bright transition-colors border border-outline-variant/20">Parts
+                                        Inventory</button>
+                                    <button
+                                        class="px-4 py-2 bg-surface-container-highest rounded-full text-xs font-medium hover:bg-surface-bright transition-colors border border-outline-variant/20">Timer
+                                        Module</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div> -->
+            </div>
+        </section>
+        <!-- Input Bar (The Tool) -->
+        <footer
+            class="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-background via-background/90 to-transparent">
+            <div class="max-w-4xl mx-auto relative group">
+                <div
+                    class="bg-surface-container-low border border-outline-variant/20 rounded-full p-2 flex items-center gap-4 focus-within:bg-surface-container-high transition-all duration-300">
+                    <!-- <button class="p-3 text-on-surface-variant hover:text-white transition-colors">
+                        <span class="material-symbols-outlined" data-icon="attach_file">attach_file</span>
+                    </button> -->
+                    <input id="message-input"
+                        class="bg-transparent border-none focus:ring-0 flex-grow text-on-surface placeholder:text-on-surface-variant text-sm py-2"
+                        placeholder="What can I help you with..." type="text" />
+                    <div class="flex items-center gap-2">
+                        <!-- <button class="p-3 text-on-surface-variant hover:text-white transition-colors">
+                            <span class="material-symbols-outlined" data-icon="mic">mic</span>
+                        </button> -->
+                        <button id="send-btn"
+                            class="metallic-gradient w-12 h-12 rounded-full flex items-center justify-center text-on-secondary shadow-lg active:scale-90 transition-transform">
+                            <span class="material-symbols-outlined font-bold"
+                                data-icon="arrow_forward">arrow_forward</span>
+                        </button>
+                    </div>
+                </div>
+                <!-- <div class="mt-2 text-center">
+                    <span class="text-[10px] text-on-surface-variant/50 uppercase tracking-[0.2em]">Press cmd + enter to
+                        execute</span>
+                </div> -->
+            </div>
+        </footer>
+        <!-- Decorative Elements -->
+        <!-- <div class="fixed top-0 left-0 md:left-64 p-8 opacity-20 pointer-events-none hidden lg:block"> -->
+        <div class="fixed top-0 left-0 md:left-64 p-8 opacity-20 pointer-events-none hidden lg:block" style="z-index: -1;">
+            <div
+                class="text-[140px] font-headline font-bold text-outline-variant leading-none tracking-tighter select-none">
+                ATELIER</div>
+        </div>
+    </main>
+    <!-- Visual Polish: Pulse Signature Overlay -->
+    <div class="fixed bottom-10 right-10 w-32 h-32 bg-primary/5 rounded-full blur-3xl pointer-events-none"></div>
+    <script>
+        const input = document.getElementById('message-input');
+        const sendBtn = document.getElementById('send-btn');
+        const chatCanvas = document.getElementById('chat-canvas');
+        const csrf = document.querySelector('meta[name="_csrf"]').content;
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+
+        sendBtn.addEventListener('click', sendMessage);
+        input.addEventListener('keydown', e => {
+            if (e.key == 'Enter') sendMessage();
+        });
+
+        async function sendMessage() {
+            const message = input.value.trim();
+            if (!message) return;
+
+            chatCanvas.insertAdjacentHTML('beforeend',`
+                <div class="flex justify-end">
+                    <div class="bg-surface-container-high px-6 py-4 rounded-3xl rounded-tr-none max-w-lg border border-outline-variant/10">
+                        <p class="text-on-surface text-sm leading-relaxed">${message}</p>
+                    </div>
+                </div>
+            `);
+            input.value='';
+
+            const response = await fetch('/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    [csrfHeader]: csrf
+                },
+                body: `message=${encodeURIComponent(message)}`
+            });
+            const reply = await response.text();
+            const cleanReply = JSON.parse(reply).response.replace(/\n/g, '<br>');
+
+
+            chatCanvas.insertAdjacentHTML('beforeend', `
+                <div class="flex justify-start items-start gap-4">
+                    <div class="w-8 h-8 rounded-full metallic-gradient flex items-center justify-center flex-shrink-0 mt-1">
+                        <span class="material-symbols-outlined text-on-secondary text-lg">auto_awesome</span>
+                    </div>
+                    <div class="glass-panel p-6 rounded-3xl border border-outline-variant/20 max-w-lg">
+                        <p class="text-on-surface text-sm leading-relaxed">${cleanReply}</p>
+                    </div>
+                </div>
+            `);
+
+            chatCanvas.lastElementChild.scrollIntoView({ behavior: 'smooth' });
+
+        }
+    </script>
+</body>
+
+</html>
