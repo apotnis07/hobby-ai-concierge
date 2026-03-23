@@ -43,6 +43,7 @@ sequenceDiagram
     SpringBoot-->>-Browser: 200 chat.html
     Note right of Browser: Thymeleaf renders chat page with CSRF token
 ```
+---
 
 ### Chat Flow
 
@@ -142,6 +143,8 @@ hobby-ai-concierge/
 - Python 3.9+
 - OpenAI API key - Generate API key from here: https://platform.openai.com/settings/organization/api-keys
 - Java 21+
+- Docker Desktop
+- AWS CLI (for deployment only)
 
 
 ### Installation
@@ -162,8 +165,10 @@ Create a `.env` file in hobby-ai-concierge/langchain-service:
 ```
 OPENAI_API_KEY=your_openai_api_key_here
 ```
+---
+## Local Implementation 
 
-## Implementation 
+Ensure Docker Desktop is running.
 
 ### Two Separate Docker Containers
 
@@ -181,7 +186,13 @@ cd hobby-ai-concierge/springboot-app
 ./mvnw spring-boot:run
 ```
 
-The app can be accessed at localhost:80
+Navigate to `http://localhost:80` and log in with:
+
+```
+Username: demo
+Password: password
+```
+
 
 ### Single Docker Container using Docker Compose
 
@@ -190,17 +201,30 @@ cd hobby-ai-concierge
 docker-compose up --build
 ```
 
-The app can be accessed at localhost:80
+Navigate to `http://localhost:80` and log in with:
 
+```
+Username: demo
+Password: password
+```
 
-### Deploy to AWS Elastic Beanstalk
+---
+
+## Deploy to AWS
+
+### Prepare to deploy to AWS Elastic Beanstalk 
 
 Need to be logged in to your AWS account on AWS CLI
 
+To set up use
 ```bash
-aws login
+aws configure
 ```
 
+To verify use
+```bash
+aws configure list
+```
 
 ```bash
 aws ecr create-repository --repository-name hobby-ai-concierge/springboot-app --region us-east-1
@@ -250,7 +274,7 @@ cd hobby-ai-concierge/aws-deploy
 zip ../deploy.zip docker-compose.yml
 ```
 
-### AWS Console - AWS EB 
+### Deploy to AWS Elastic Beanstalk
 
 1. Open AWS Elastic Beanstalk on AWS Console
 2. Select `Create Application`
@@ -265,5 +289,28 @@ zip ../deploy.zip docker-compose.yml
 11. In `Environment Properties` add Environment Property.
 12. With `Plain text` enter `OPENAI_API_KEY` in Name and your API key in Value.
 13. Create the environment. This will take a few minutes to deploy.
-14. Select the Domain URL and interact with the application as usual.
+14. Select the Domain URL and interact with the application as usual with credentials `Username`: user and `Password`: password
 15. Once done, terminate the environment and also delete the Docker images from AWS ECR.
+
+---
+
+**How the routing works:**
+- The **router** reads the user's input and decides which destination chain best fits the question
+- The **guitar chain** uses `ConversationBufferWindowMemory` to remember the last `k` exchanges
+- The **photography chain** is stateless — each question is answered independently
+- The **default chain** handles anything that doesn't match a specialist
+
+**Key design decisions:**
+- Spring Boot is the sole public entry point — FastAPI is only reachable internally
+- Authentication is handled at the Spring Boot layer before any request reaches the AI service
+- The guitar chain maintains a sliding window memory of the last `k=2` exchanges — questions beyond the window are forgotten, demonstrating controlled context degradation
+- MultiPromptChain does not pass conversation history through the router — it only routes the input string for each query independently. To work around this, guitar_memory is instantiated outside the router chain and passed directly into the guitar LLMChain. The memory object uses memory_key="history" which maps to the {history} placeholder in the guitar prompt template, injecting the conversation history on every call. This means memory is maintained across turns even though the router itself is stateless — the guitar chain manages its own context window independently of the routing logic.
+
+---
+
+## Known Limitations
+
+- **In-memory conversation state** — the guitar chain memory is stored in the FastAPI container's RAM. If the container restarts, all conversation history is lost. A production solution would persist memory to a database.
+- **Single user** — the current setup uses a single in-memory user. A production setup would use a database-backed `UserDetailsService`.
+- **Stateless photography chain** — the photography expert has no memory by design. Each question is answered independently.
+
