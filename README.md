@@ -174,8 +174,12 @@ Create a virtual environment in the langchain-service folder and install the pac
 
 ```bash
 cd ./langchain-service
+
+# Create and activate virtual env
 python -m venv venv
 source venv/bin/activate
+
+# Install dependencies
 pip install -r requirements.txt
 ```
 
@@ -248,14 +252,13 @@ aws configure list
 ```
 
 ```bash
+# Create private ECR repositories to store the Docker images for both services
 aws ecr create-repository --repository-name hobby-ai-concierge/springboot-app --region us-east-1
 aws ecr create-repository --repository-name hobby-ai-concierge/langchain-service --region us-east-1
-```
 
-Each command will return a JSON response containing a `repositoryUri` that looks like:
-```bash
-{your_aws_accountID}.dkr.ecr.us-east-1.amazonaws.com/hobby-ai-concierge/langchain-service
-{your_aws_accountID}.dkr.ecr.us-east-1.amazonaws.com/hobby-ai-concierge/springboot-app
+# Each command will return a JSON response containing a `repositoryUri` that looks like:
+# {your_aws_accountID}.dkr.ecr.us-east-1.amazonaws.com/hobby-ai-concierge/langchain-service
+# {your_aws_accountID}.dkr.ecr.us-east-1.amazonaws.com/hobby-ai-concierge/springboot-app
 ```
 
 ```bash
@@ -281,7 +284,7 @@ docker push {your_aws_accountID}.dkr.ecr.us-east-1.amazonaws.com/hobby-ai-concie
 docker push {your_aws_accountID}.dkr.ecr.us-east-1.amazonaws.com/hobby-ai-concierge/langchain-service:latest
 ```
 
-In aws-deploy/docker-compose.yml replace the images for langchain-serivce and springboot-app with your images
+In aws-deploy/docker-compose.yml replace the images for langchain-service and springboot-app with your images
 ```bash
 langchain-service:
     image: {your_aws_accountID}.dkr.ecr.us-east-1.amazonaws.com/hobby-ai-concierge/langchain-service:latest
