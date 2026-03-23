@@ -359,3 +359,53 @@ chain.run("What chords do I know?")
 - **Single user** — the current setup uses a single in-memory user. A production setup would use a database-backed `UserDetailsService`.
 - **Stateless photography chain** — the photography expert has no memory by design. Each question is answered independently.
 
+
+---
+
+## Gallery
+
+<details>
+<summary><b>1. User Experience & UI</b> (Click to expand)</summary>
+
+### The Atelier Home
+![Home Page](assets/hero.png)
+
+### The Atelier Login
+![Home Page](assets/login.png)
+
+### Specialized Chat Interface
+![Chat UI](assets/chat.png)
+</details>
+
+<details>
+<summary><b>2. System Architecture & Logs</b> (Click to expand)</summary>
+
+| FastAPI Routing Logs |
+|------------|
+| ![Logs](assets/fastapi.png) |
+
+</details>
+
+<details>
+<summary><b>3. AWS Deployment</b> (Click to expand)</summary>
+
+### Hosted on AWS Elastic Beanstalk using Multi-Container Docker.
+![AWS Dashboard](assets/aws-EB.png)
+
+### AWS Elastic Container Registry
+![AWS ECR](assets/ecr.png)
+
+</details>
+
+<details>
+<summary><b>4. Chat UI Demo</b> (Click to expand)</summary>
+
+### Chat demo with controlled memory degradation
+![Chat_1](assets/chat1.png)
+![Chat_2](assets/chat2.png)
+![Chat_3](assets/chat3_forgot.png)
+
+
+
+
+</details>
