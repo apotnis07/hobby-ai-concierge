@@ -1,5 +1,12 @@
 # Hobby AI Concierge
 
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-6DB33F?style=flat-square&logo=spring-boot&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=flat-square&logo=fastapi&logoColor=white)
+![LangChain](https://img.shields.io/badge/LangChain-1C3C3C?style=flat-square&logo=langchain&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)
+![AWS](https://img.shields.io/badge/AWS-232F3E?style=flat-square&logo=amazon-aws&logoColor=white)
+![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=flat-square&logo=openai&logoColor=white)
+
 A full-stack AI chatbot with a microservices architecture that routes hobby-related questions to domain-specific expert agents and maintains conversation memory across turns. Built with Spring Boot, LangChain, Docker, and deployed to AWS Elastic Beanstalk.
 
 ## Architecture
@@ -262,6 +269,7 @@ aws ecr create-repository --repository-name hobby-ai-concierge/langchain-service
 ```
 
 ```bash
+# Authenticate Docker to your private Amazon ECR registry
 aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin {your_aws_accountID}.dkr.ecr.us-east-1.amazonaws.com
 ```
 
