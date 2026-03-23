@@ -4,55 +4,85 @@ A full-stack AI chatbot with a microservices architecture that routes hobby-rela
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────┐
-│                     Browser                         │
-│           Google Stitch UI (Thymeleaf)              │
-└──────────────────────┬──────────────────────────────┘
-                       │ HTTP + Session Cookie
-┌──────────────────────▼──────────────────────────────┐
-│              Spring Boot (Port 8080)                │
-│                                                     │
-│  ┌─────────────────┐    ┌───────────────────────┐   │
-│  │ Spring Security │    │    ChatController     │   │
-│  │ Session Auth    │    │    /chat (GET + POST) │   │
-│  │ CSRF Protection │    └───────────┬───────────┘   │
-│  └─────────────────┘                │               │
-│                          ┌──────────▼──────────┐    │
-│                          │  LangChainService   │    │
-│                          │  WebClient proxy    │    │
-│                          └──────────┬──────────┘    │
-└─────────────────────────────────────┼───────────────┘
-                       Internal HTTP  │ (not public)
-┌─────────────────────────────────────▼───────────────┐
-│              FastAPI + LangChain (Port 8000)        │
-│                                                     │
-│  ┌──────────────────────────────────────────────┐   │
-│  │           MultiPromptChain Router            │   │
-│  └────────────┬─────────────────┬───────────────┘   │
-│               │                 │                   │
-│  ┌────────────▼──────┐  ┌───────▼────────────────┐  │
-│  │   Guitar Chain    │  │  Photography Chain     │  │
-│  │  + Buffer Window  │  │     (stateless)        │  │
-│  │    Memory (k=2)   │  └────────────────────────┘  │
-│  └───────────────────┘                              │
-└─────────────────────────────────────────────────────┘
-                       │
-               ┌───────▼───────┐
-               │  OpenAI API   │
-               └───────────────┘
+### Auth Flow
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Browser
+    participant SpringBoot as Spring Boot
+
+    Browser->>SpringBoot: GET /chat
+    Note right of Browser: User navigates to chat page
+    
+    activate SpringBoot
+    SpringBoot->>SpringBoot: Spring Security intercepts
+    Note right of SpringBoot: Checks session — not authenticated
+    deactivate SpringBoot
+
+    SpringBoot-->>Browser: 302 redirect → /login
+    Note right of Browser: Sends user to login page
+
+    Browser->>SpringBoot: GET /login
+    SpringBoot-->>Browser: 200 login.html
+    Note right of Browser: Thymeleaf renders login page
+
+    Browser->>+SpringBoot: POST /login (credentials)
+    Note left of SpringBoot: User submits username + password
+    
+    SpringBoot->>SpringBoot: Spring Security validates
+    Note right of SpringBoot: Checks against UserDetailsService
+
+    SpringBoot-->>-Browser: 302 redirect → /chat
+    Note right of Browser: Sets session cookie, redirects
+
+    Browser->>+SpringBoot: GET /chat (with session)
+    SpringBoot->>SpringBoot: Security: authenticated
+    Note right of SpringBoot: Session cookie valid — allow
+
+    SpringBoot-->>-Browser: 200 chat.html
+    Note right of Browser: Thymeleaf renders chat page with CSRF token
 ```
 
-**How the routing works:**
-- The **router** reads the user's input and decides which destination chain best fits the question
-- The **guitar chain** uses `ConversationBufferWindowMemory` to remember the last `k` exchanges
-- The **photography chain** is stateless — each question is answered independently
-- The **default chain** handles anything that doesn't match a specialist
+### Chat Flow
 
-**Key design decisions:**
-- Spring Boot is the sole public entry point — FastAPI is only reachable internally
-- Authentication is handled at the Spring Boot layer before any request reaches the AI service
-- The guitar chain maintains a sliding window memory of the last `k=2` exchanges — questions beyond the window are forgotten, demonstrating controlled context degradation
+```mermaid
+sequenceDiagram
+    autonumber
+    participant B as Browser
+    participant SB as Spring Boot
+    participant CC as ChatController
+    participant LS as LangChainService
+    participant FA as FastAPI
+    participant OA as OpenAI
+
+    B->>+SB: POST /chat (message=...)
+    Note right of B: JS fetch with CSRF token
+    
+    SB->>SB: Spring Security checks
+    Note right of SB: Validates session + CSRF
+
+    SB->>+CC: ChatController.sendMessage()
+    CC->>+LS: langChainService.chat(message)
+    
+    LS->>+FA: POST /chat?prompt=...
+    Note right of LS: WebClient builds URL
+
+    FA->>FA: chain.run(prompt)
+    Note right of FA: LLMRouterChain classifies
+
+    FA->>+OA: OpenAI API call
+    OA-->>-FA: LLM response
+    
+    FA-->>-LS: {"response": "..."}
+    LS-->>-CC: raw JSON string
+    CC-->>-SB: return response string
+    SB-->>-B: 200 response body
+    
+    B->>B: JSON.parse + render bubble
+    Note left of B: Extracts .response, appends to DOM
+```
+
 
 
 ---
@@ -61,7 +91,7 @@ A full-stack AI chatbot with a microservices architecture that routes hobby-rela
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | Google Stitch, Thymeleaf, Tailwind CSS |
+| Frontend | Google Stitch, Thymeleaf, Tailwind CSS, HTML, JavaScript |
 | API Gateway | Spring Boot 4.0, Spring Security |
 | AI Service | Python, FastAPI, LangChain, OpenAI GPT-4o-mini |
 | Containerization | Docker, Docker Compose |
@@ -89,9 +119,9 @@ hobby-ai-concierge/
 │   │       └── LangChainService.java   # WebClient proxy to FastAPI
 │   ├── src/main/resources/
 │   │   ├── templates/
-│   │   │   ├── login.html
-│   │   │   ├── home.html
-│   │   │   └── chat.html
+│   │   │   ├── login.html              # Login Page
+│   │   │   ├── home.html               # Home Page
+│   │   │   └── chat.html               # Chat Page
 │   │   └── application.properties
 │   └── Dockerfile
 └── langchain-service/
