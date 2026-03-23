@@ -99,6 +99,20 @@ sequenceDiagram
 | Cloud | AWS Elastic Beanstalk, Amazon ECR |
 | Build | Maven, pip |
 
+---
+
+**How the routing works:**
+- The **router** reads the user's input and decides which destination chain best fits the question
+- The **guitar chain** uses `ConversationBufferWindowMemory` to remember the last `k` exchanges
+- The **photography chain** is stateless — each question is answered independently
+- The **default chain** handles anything that doesn't match a specialist
+
+**Key design decisions:**
+- Spring Boot is the sole public entry point — FastAPI is only reachable internally
+- Authentication is handled at the Spring Boot layer before any request reaches the AI service
+- The guitar chain maintains a sliding window memory of the last `k=2` exchanges — questions beyond the window are forgotten, demonstrating controlled context degradation
+- MultiPromptChain does not pass conversation history through the router — it only routes the input string for each query independently. To work around this, guitar_memory is instantiated outside the router chain and passed directly into the guitar LLMChain.
+- The memory object uses memory_key="history" which maps to the {history} placeholder in the guitar prompt template, injecting the conversation history on every call. This means memory is maintained across turns even though the router itself is stateless — the guitar chain manages its own context window independently of the routing logic.
 
 ---
 
@@ -145,6 +159,13 @@ hobby-ai-concierge/
 - Java 21+
 - Docker Desktop
 - AWS CLI (for deployment only)
+
+### Configuration
+
+| Parameter | Default | Description |
+|---|---|---|
+| `llm_model` | `gpt-4o-mini-2024-07-18` | OpenAI model to use |
+| `k` | `2` | Number of past exchanges guitar chain remembers |
 
 
 ### Installation
@@ -294,17 +315,30 @@ zip ../deploy.zip docker-compose.yml
 
 ---
 
-**How the routing works:**
-- The **router** reads the user's input and decides which destination chain best fits the question
-- The **guitar chain** uses `ConversationBufferWindowMemory` to remember the last `k` exchanges
-- The **photography chain** is stateless — each question is answered independently
-- The **default chain** handles anything that doesn't match a specialist
+### Demo
 
-**Key design decisions:**
-- Spring Boot is the sole public entry point — FastAPI is only reachable internally
-- Authentication is handled at the Spring Boot layer before any request reaches the AI service
-- The guitar chain maintains a sliding window memory of the last `k=2` exchanges — questions beyond the window are forgotten, demonstrating controlled context degradation
-- MultiPromptChain does not pass conversation history through the router — it only routes the input string for each query independently. To work around this, guitar_memory is instantiated outside the router chain and passed directly into the guitar LLMChain. The memory object uses memory_key="history" which maps to the {history} placeholder in the guitar prompt template, injecting the conversation history on every call. This means memory is maintained across turns even though the router itself is stateless — the guitar chain manages its own context window independently of the routing logic.
+<details>
+<summary>See demo conversation</summary>
+
+```python
+# Turn 1 - remembers nothing yet
+chain.run("I can only play C, A, D, E chords. Give me 3 songs I can play.")
+# > "Sure! Here are three popular songs that primarily use the chords C, A, D, and E:..."
+
+# Turn 2 - remembers Turn 1
+chain.run("What genre are these 3 guitar songs?")
+# > "The three songs mentioned span different genres:..."
+
+# Turn 3 - remembers Turn 1 & 2
+chain.run("Tell me one more guitar song.")
+# > "Absolutely! Another song you can play with the chords C, A, D, and E is..."
+
+# Turn 4 - window exceeded, forgets Turn 1
+chain.run("What chords do I know?")
+# > "I don't have access to your specific knowledge or the chords you know..."
+```
+
+</details>
 
 ---
 
