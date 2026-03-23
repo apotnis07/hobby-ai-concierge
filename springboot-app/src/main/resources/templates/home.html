@@ -82,6 +82,9 @@
             background-image: radial-gradient(circle, #444748 1px, transparent 1px);
             background-size: 24px 24px;
             opacity: 0.15;
+            /* This creates a "vignette" effect for the dots */
+            mask-image: radial-gradient(circle, black 40%, transparent 90%);
+            -webkit-mask-image: radial-gradient(circle, black 40%, transparent 90%);
         }
 
         .glass-panel {
@@ -92,11 +95,99 @@
         .signature-gradient {
             background: linear-gradient(45deg, #ffffff, #c6c6c7);
         }
+
+        /* Deep Violet Gradient Background */
+        .bg-violet-gradient {
+            background: radial-gradient(circle at center, #1a1033 0%, #0d0e13 100%);
+        }
+
+        /* The Glow Pulse Animation */
+        @keyframes glowPulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 0.3;
+                filter: blur(80px);
+            }
+
+            50% {
+                transform: scale(1.2);
+                opacity: 0.6;
+                filter: blur(100px);
+            }
+        }
+
+        @keyframes topLeftGlow {
+
+            0%,
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.2;
+                filter: blur(60px);
+            }
+
+            50% {
+                transform: translate(-50%, -50%) scale(1.1);
+                opacity: 0.4;
+                filter: blur(70px);
+            }
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .bottom-glow {
+            position: absolute;
+            bottom: 0;
+            /* Align to the actual bottom */
+            left: 50%;
+            transform: translate(-50%, 50%);
+            /* Move it halfway down so it's a "horizon" glow */
+            width: 600px;
+            height: 300px;
+            background: #4f46e5;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1;
+            filter: blur(80px);
+            /* Add blur here if not in animation */
+            animation: glowPulse 8s infinite ease-in-out;
+        }
+
+        .top-left-glow {
+            position: absolute;
+            top: 0;
+            left: 15%;
+            width: 400px;
+            /* Sizing it slightly smaller */
+            height: 400px;
+            background: #c084fc;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1;
+            transform: translate(-50%, -50%);
+            /* Note: Starts from 0%, ends at 100%, different timing */
+            animation: topLeftGlow 12s infinite ease-in-out;
+        }
     </style>
 </head>
 
 <body
-    class="bg-surface text-on-surface font-body selection:bg-primary selection:text-on-primary flex flex-col min-h-screen">
+    class="bg-violet-gradient text-on-surface font-body selection:bg-primary selection:text-on-primary flex flex-col min-h-screen overflow-hidden">
     <!-- TopNavBar (JSON Anchor) -->
     <header class="w-full top-0 sticky bg-[#121318] dark:bg-[#121318] z-50">
         <div class="flex justify-between items-center w-full px-8 py-6 max-w-[1440px] mx-auto">
@@ -124,8 +215,11 @@
     <main class="relative flex-grow flex flex-col items-center justify-center px-6 overflow-hidden">
         <!-- Dot Grid Background -->
         <div class="absolute inset-0 dot-grid pointer-events-none"></div>
+        <!-- Glow -->
+        <div class="bottom-glow"></div>
+        <div class="top-left-glow"></div>
         <!-- Hero Section -->
-        <section class="relative z-10 max-w-4xl w-full text-center py-24 md:py-48">
+        <section class="relative z-10 max-w-4xl w-full text-center py-24 md:py-48 animate-float">
             <div class="mb-6 flex justify-center">
                 <span
                     class="px-4 py-1.5 rounded-full bg-secondary-container text-on-secondary-container font-label text-[0.75rem] font-semibold tracking-widest uppercase">
@@ -137,23 +231,33 @@
                 Welcome!
             </h1>
             <p class="font-body text-lg md:text-xl text-on-surface-variant max-w-2xl mx-auto mb-16 leading-relaxed">
-                An AI-powered assistant that routes your hobby questions to the right expert and remembers your conversation across turns. Powered by LangChain, secured by Spring, and always ready to help.
+                An AI-powered assistant that routes your hobby questions to the right expert and remembers your
+                conversation across turns. Powered by LangChain, secured by Spring, and always ready to help.
             </p>
             <div class="flex flex-col md:flex-row items-center justify-center gap-6">
-                <a class="group relative px-8 py-4 rounded-full signature-gradient text-on-primary font-label font-bold flex items-center gap-3 transition-all duration-300 hover:shadow-[0_0_2rem_rgba(255,255,255,0.2)] active:scale-95"
+                <a class="group relative px-8 py-4 rounded-full signature-gradient text-on-primary font-label font-bold flex items-center gap-3 transition-all duration-300 
+          hover:shadow-[0_0_30px_rgba(192,132,252,0.4)] border border-white/20 backdrop-blur-sm active:scale-95"
                     th:href="@{/chat}">
                     Click here to get started
-                    <span
-                        class="material-symbols-outlined text-xl transition-transform duration-300 group-hover:translate-x-1">arrow_forward</span>
+                    <span class="material-symbols-outlined ...">arrow_forward</span>
                 </a>
             </div>
         </section>
         <!-- Decorative Elements -->
-        <div
+        <!-- <div
             class="absolute bottom-0 left-0 w-full h-64 bg-gradient-to-t from-surface to-transparent pointer-events-none">
-        </div>
+        </div> -->
     </main>
-    <!-- Footer (JSON Anchor) -->
+    <!-- Mouse Glow -->
+    <!-- <div id="cursor-glow" class="fixed w-64 h-64 bg-indigo-500/10 rounded-full blur-[80px] pointer-events-none z-0"></div>
+
+    <script>
+        const glow = document.getElementById('cursor-glow');
+        window.addEventListener('mousemove', (e) => {
+            glow.style.left = e.clientX - 128 + 'px';
+            glow.style.top = e.clientY - 128 + 'px';
+        });
+    </script> -->
 </body>
 
 </html>
