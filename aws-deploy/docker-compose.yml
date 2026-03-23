@@ -1,0 +1,17 @@
+version: "3"
+services:
+  langchain-service:
+    image: 411307359573.dkr.ecr.us-east-1.amazonaws.com/hobby-ai-concierge/langchain-service:latest
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+
+  springboot-app:
+    image: 411307359573.dkr.ecr.us-east-1.amazonaws.com/hobby-ai-concierge/springboot-app:latest
+    ports:
+      - "80:8080"
+    depends_on:
+      - langchain-service
+    environment:
+      - FASTAPI_URL=http://langchain-service:8000
