@@ -326,6 +326,16 @@ zip ../deploy.zip docker-compose.yml
 
 ---
 
+
+## Known Limitations
+
+- **In-memory conversation state** — the guitar chain memory is stored in the FastAPI container's RAM. If the container restarts, all conversation history is lost. A production solution would persist memory to a database.
+- **Single user** — the current setup uses a single in-memory user. A production setup would use a database-backed `UserDetailsService`.
+- **Stateless photography chain** — the photography expert has no memory by design. Each question is answered independently.
+
+
+---
+
 ## Demo
 
 <details>
@@ -353,15 +363,6 @@ chain.run("What chords do I know?")
 
 ---
 
-## Known Limitations
-
-- **In-memory conversation state** — the guitar chain memory is stored in the FastAPI container's RAM. If the container restarts, all conversation history is lost. A production solution would persist memory to a database.
-- **Single user** — the current setup uses a single in-memory user. A production setup would use a database-backed `UserDetailsService`.
-- **Stateless photography chain** — the photography expert has no memory by design. Each question is answered independently.
-
-
----
-
 ## Gallery
 
 <details>
@@ -371,7 +372,7 @@ chain.run("What chords do I know?")
 ![Home Page](assets/hero.png)
 
 ### The Atelier Login
-![Home Page](assets/login.png)
+![Login Page](assets/login.png)
 
 ### Specialized Chat Interface
 ![Chat UI](assets/chat.png)
