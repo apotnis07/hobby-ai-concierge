@@ -106,8 +106,55 @@
             -webkit-backdrop-filter: blur(20px);
         }
 
+        strong {
+            font-weight: 700;
+            color: #ffffff;
+        }
+
         .metallic-gradient {
             background: linear-gradient(135deg, #ffffff 0%, #a5acb8 100%);
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+
+            50% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 12px 18px;
+            background: rgba(192, 132, 252, 0.1);
+            /* Light Lavender Tint */
+            border: 1px solid rgba(192, 132, 252, 0.2);
+            border-radius: 20px;
+            width: fit-content;
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            background-color: #c084fc;
+            /* Electric Lavender */
+            border-radius: 50%;
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+
+        .dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .dot:nth-child(3) {
+            animation-delay: 0.4s;
         }
     </style>
 </head>
@@ -121,7 +168,7 @@
             <p class="text-xs text-on-surface-variant font-medium tracking-widest uppercase mt-1">AI Concierge</p>
         </div>
         <nav class="flex-grow space-y-2">
-            <button
+            <button id="new-chat-btn" onclick="window.location.reload()"
                 class="w-full flex items-center gap-3 bg-white text-black rounded-full font-bold px-4 py-3 transition-all duration-300 ease-in-out">
                 <span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
                 <span class="font-['Inter'] text-sm tracking-tight">New Chat</span>
@@ -283,7 +330,8 @@
         </footer>
         <!-- Decorative Elements -->
         <!-- <div class="fixed top-0 left-0 md:left-64 p-8 opacity-20 pointer-events-none hidden lg:block"> -->
-        <div class="fixed top-0 left-0 md:left-64 p-8 opacity-20 pointer-events-none hidden lg:block" style="z-index: -1;">
+        <div class="fixed top-0 left-0 md:left-64 p-8 opacity-20 pointer-events-none hidden lg:block"
+            style="z-index: -1;">
             <div
                 class="text-[140px] font-headline font-bold text-outline-variant leading-none tracking-tighter select-none">
                 ATELIER</div>
@@ -307,40 +355,66 @@
             const message = input.value.trim();
             if (!message) return;
 
-            chatCanvas.insertAdjacentHTML('beforeend',`
+            chatCanvas.insertAdjacentHTML('beforeend', `
                 <div class="flex justify-end">
                     <div class="bg-surface-container-high px-6 py-4 rounded-3xl rounded-tr-none max-w-lg border border-outline-variant/10">
                         <p class="text-on-surface text-sm leading-relaxed">${message}</p>
                     </div>
                 </div>
             `);
-            input.value='';
+            input.value = '';
+            chatCanvas.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'end' });
 
-            const response = await fetch('/chat', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    [csrfHeader]: csrf
-                },
-                body: `message=${encodeURIComponent(message)}`
-            });
-            const reply = await response.text();
-            const cleanReply = JSON.parse(reply).response.replace(/\n/g, '<br>');
-
-
-            chatCanvas.insertAdjacentHTML('beforeend', `
-                <div class="flex justify-start items-start gap-4">
-                    <div class="w-8 h-8 rounded-full metallic-gradient flex items-center justify-center flex-shrink-0 mt-1">
-                        <span class="material-symbols-outlined text-on-secondary text-lg">auto_awesome</span>
+            const loaderId = 'loader-' + Date.now();
+            chatCanvas.insertAdjacentHTML('beforeend',`
+                <div id="${loaderId}" class="flex justify-start items-center gap-3 animate-fade-in">
+                    <div class="typing-indicator">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
                     </div>
-                    <div class="glass-panel p-6 rounded-3xl border border-outline-variant/20 max-w-lg">
-                        <p class="text-on-surface text-sm leading-relaxed">${cleanReply}</p>
-                    </div>
+                    <span class="text-[10px] text-purple-300/50 uppercase tracking-widest font-bold">Atelier is thinking</span>
                 </div>
             `);
+            chatCanvas.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'end' });
 
-            chatCanvas.lastElementChild.scrollIntoView({ behavior: 'smooth' });
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        [csrfHeader]: csrf
+                    },
+                    body: `message=${encodeURIComponent(message)}`
+                });
+                const reply = await response.text();
+                const rawText = JSON.parse(reply).response;
 
+                document.getElementById(loaderId).remove();
+
+                // 3. FIX: Handle Markdown Bold and Newlines
+                // This replaces **text** with <strong>text</strong> and \n with <br>
+                const formattedText = rawText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                const cleanReply = formattedText.replace(/\n/g, '<br>');
+
+
+                chatCanvas.insertAdjacentHTML('beforeend', `
+                    <div class="flex justify-start items-start gap-4">
+                        <div class="w-8 h-8 rounded-full metallic-gradient flex items-center justify-center flex-shrink-0 mt-1">
+                            <span class="material-symbols-outlined text-on-secondary text-lg">auto_awesome</span>
+                        </div>
+                        <div class="glass-panel p-6 rounded-3xl border border-outline-variant/20 max-w-lg">
+                            <p class="text-on-surface text-sm leading-relaxed">${cleanReply}</p>
+                        </div>
+                    </div>
+                `);
+
+                chatCanvas.lastElementChild.scrollIntoView({ behavior: 'smooth' });
+            } catch(error){
+                // Remove loader even if there's an error
+                if(document.getElementById(loaderId)) document.getElementById(loaderId).remove();
+                console.error("Chat Error:", error);
+            }
         }
     </script>
 </body>
